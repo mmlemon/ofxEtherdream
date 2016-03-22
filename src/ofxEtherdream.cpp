@@ -61,6 +61,11 @@ void ofxEtherdream::init() {
     state = ETHERDREAM_FOUND;
 }
 
+etherdream* ofxEtherdream::getDeviceInfo()
+{
+    return device;
+}
+
 //--------------------------------------------------------------
 void ofxEtherdream::threadedFunction() {
     while (isThreadRunning() != 0) {

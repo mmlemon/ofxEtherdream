@@ -56,6 +56,8 @@ public:
     void setWaitBeforeSend(bool b);
     bool getWaitBeforeSend() const;
     
+    etherdream* getDeviceInfo();
+    
 private:
     void init();
     
