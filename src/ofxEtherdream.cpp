@@ -1,24 +1,57 @@
 #include "ofxEtherdream.h"
+#include "etherdream.h"
 
 //--------------------------------------------------------------
-void ofxEtherdream::setup(bool bStartThread, int idEtherdream) {
-
-    idEtherdreamConnection = idEtherdream;
-    
-    etherdream_lib_start();
+void ofxEtherdream::setup()
+{
+    if(!lib_initialized)
+    {
+        startlib();
+    }
     
     setPPS(30000);
     setWaitBeforeSend(false);
-    
-	/* Sleep for a bit over a second, to ensure that we see broadcasts
-	 * from all available DACs. */
-	usleep(1000000);
-    
-    init();
-    
-    if(bStartThread) start();
 }
 
+//void ofxEtherdream::setup(bool bStartThread, int idEtherdream) {
+//
+//    idEtherdreamConnection = idEtherdream;
+//    
+//    etherdream_lib_start();
+//    
+//    setPPS(30000);
+//    setWaitBeforeSend(false);
+//    
+//	/* Sleep for a bit over a second, to ensure that we see broadcasts
+//	 * from all available DACs. */
+//	usleep(1000000);
+//    
+//    init();
+//    
+//    if(bStartThread) start();
+//}
+
+bool ofxEtherdream::connect(){
+    if(getDevice()==NULL){ return;}
+    
+    int connect = etherdream_connect(device);
+    if(connect==0){
+        state = ETHERDREAM_FOUND;
+        cout << "connecting......" << endl;
+        start();
+    }else{
+        state = ETHERDREAM_NOTFOUND;
+        cout << "connecting failed." << endl;
+    }
+    return (connect==0);
+}
+void ofxEtherdream::disconnect()
+{
+    if(getDevice()==NULL){ return;}
+    kill();
+    etherdream_disconnect(device);
+    state = ETHERDREAM_NOTFOUND;
+}
 
 //--------------------------------------------------------------
 bool ofxEtherdream::stateIsFound() {
@@ -27,11 +60,13 @@ bool ofxEtherdream::stateIsFound() {
 
 //--------------------------------------------------------------
 bool ofxEtherdream::checkConnection(bool bForceReconnect) {
-    if(device->state == ST_SHUTDOWN || device->state == ST_BROKEN || device->state == ST_DISCONNECTED) {
-        
+    if(device->state == ST_SHUTDOWN || device->state == ST_BROKEN || device->state == ST_DISCONNECTED)
+    {
+    
         if(bForceReconnect) {
             kill();
-            setup(true, idEtherdreamConnection);
+            connect();
+//            setup(true, idEtherdreamConnection);
         }
         
         return false;
@@ -59,11 +94,6 @@ void ofxEtherdream::init() {
     ofLogNotice() << "ofxEtherdream::init - done";
     
     state = ETHERDREAM_FOUND;
-}
-
-etherdream* ofxEtherdream::getDeviceInfo()
-{
-    return device;
 }
 
 //--------------------------------------------------------------
