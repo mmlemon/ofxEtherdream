@@ -3,6 +3,8 @@ ofxEtherdream
 
 Introduction
 ------------
+!THIS RESPOSITORY IS NOT ENOUGH TESTED !
+
 C++ openFrameworks addon for interfacing with the Etherdream DAC. Requires ofxIlda.
 Originally written by Daito Manabe + Yusuke Tomoto, mods (to add ofxIlda support) by Memo Akten
 [http://ether-dream.com/](http://ether-dream.com/)
@@ -29,7 +31,7 @@ ofxIlda
 
 Compatibility
 ------------
-openFrameworks 0074  
+openFrameworks 0_9_0
 
 
 
