@@ -16,17 +16,23 @@
 
 class ofxEtherdream : public ofThread {
 public:
-    ofxEtherdream():state(ETHERDREAM_NOTFOUND), bAutoConnect(false) {}
     
+    // constructor / destructor
+    ofxEtherdream():state(ETHERDREAM_NOTFOUND), bAutoConnect(false) {}
     ~ofxEtherdream() {
         kill();
     }
     
-    static bool lib_initialized;
+    // static functions -------------------------------
     static bool startlib(){
         int res = etherdream_lib_start();
+        usleep(1500000);
+        if(res==0){
+            cout << ofxEtherdream::listDevicesStr() << endl;
+        }
         return (res == 0);
     }
+    
     static vector<ofxEtherdreamInfo> listDevices(){
         int num_devices = etherdream_dac_count();
         vector<ofxEtherdreamInfo> res;
@@ -44,6 +50,7 @@ public:
         }
         return res;
     }
+    
     static string listDevicesStr(){
         vector<ofxEtherdreamInfo> info = listDevices();
         stringstream ss;
@@ -57,48 +64,37 @@ public:
     }
     
     bool stateIsFound();
-    
-    void kill() {
-        clear();
-        stop();
-        if(stateIsFound()) {
-            etherdream_stop(device);
-            etherdream_disconnect(device);
-        }
-    }
-    
-//    void setup(bool bStartThread = true, int idEtherdream = 0);
+    void kill();
     void setup();
+    void setDacRef(unsigned long dac_id);
     virtual void threadedFunction();
     bool connect();
     void disconnect();
-    
     // check if the device has shutdown (weird bug in etherdream driver) and reconnect if nessecary
     bool checkConnection(bool bForceReconnect = true);
     
     void clear();
-    void start();
-    void stop();
-
     void addPoints(const vector<ofxIlda::Point>& _points);
     void addPoints(const ofxIlda::Frame &ildaFrame);
-    
     void setPoints(const vector<ofxIlda::Point>& _points);
     void setPoints(const ofxIlda::Frame &ildaFrame);
     
     void send();
-    
     void setPPS(int i);
     int getPPS() const;
-    
     void setWaitBeforeSend(bool b);
     bool getWaitBeforeSend() const;
+    bool enableEmit();
+    void stopEmit();
+    ofxEtherdreamInfo* getDeviceInfo();
     
 private:
-    void init();
     etherdream* getDevice();
+    void start();
+    void stop();
     
 private:
+
     enum {
         ETHERDREAM_NOTFOUND = 0,
         ETHERDREAM_FOUND

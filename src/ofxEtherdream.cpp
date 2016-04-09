@@ -4,33 +4,28 @@
 //--------------------------------------------------------------
 void ofxEtherdream::setup()
 {
-    if(!lib_initialized)
-    {
-        startlib();
-    }
-    
     setPPS(30000);
     setWaitBeforeSend(false);
 }
-
-//void ofxEtherdream::setup(bool bStartThread, int idEtherdream) {
-//
-//    idEtherdreamConnection = idEtherdream;
-//    
-//    etherdream_lib_start();
-//    
-//    setPPS(30000);
-//    setWaitBeforeSend(false);
-//    
-//	/* Sleep for a bit over a second, to ensure that we see broadcasts
-//	 * from all available DACs. */
-//	usleep(1000000);
-//    
-//    init();
-//    
-//    if(bStartThread) start();
-//}
-
+//--------------------------------------------------------------
+void ofxEtherdream::setDacRef(unsigned long dac_id)
+{
+    for(int i = 0; i < listDevices().size(); i++)
+    {
+        etherdream* dac = etherdream_get(i);
+        unsigned long _id = etherdream_get_id(dac);
+        if(dac_id == _id){
+            device = dac;
+            break;
+        }
+    }
+}
+//--------------------------------------------------------------
+etherdream* ofxEtherdream::getDevice()
+{
+    return device;
+}
+//--------------------------------------------------------------
 bool ofxEtherdream::connect(){
     if(getDevice()==NULL){ return;}
     
@@ -45,6 +40,7 @@ bool ofxEtherdream::connect(){
     }
     return (connect==0);
 }
+//--------------------------------------------------------------
 void ofxEtherdream::disconnect()
 {
     if(getDevice()==NULL){ return;}
@@ -57,7 +53,15 @@ void ofxEtherdream::disconnect()
 bool ofxEtherdream::stateIsFound() {
     return state == ETHERDREAM_FOUND;
 }
-
+//--------------------------------------------------------------
+void ofxEtherdream::kill() {
+    clear();
+    stop();
+    if(stateIsFound()) {
+        etherdream_stop(device);
+        etherdream_disconnect(device);
+    }
+}
 //--------------------------------------------------------------
 bool ofxEtherdream::checkConnection(bool bForceReconnect) {
     if(device->state == ST_SHUTDOWN || device->state == ST_BROKEN || device->state == ST_DISCONNECTED)
@@ -66,7 +70,6 @@ bool ofxEtherdream::checkConnection(bool bForceReconnect) {
         if(bForceReconnect) {
             kill();
             connect();
-//            setup(true, idEtherdreamConnection);
         }
         
         return false;
@@ -75,34 +78,12 @@ bool ofxEtherdream::checkConnection(bool bForceReconnect) {
 }
 
 //--------------------------------------------------------------
-void ofxEtherdream::init() {
-    int device_num = etherdream_dac_count();
-	if (!device_num || idEtherdreamConnection>device_num) {
-		ofLogWarning() << "ofxEtherdream::init - No DACs found";
-		return 0;
-	}
-    
-	for (int i=0; i<device_num; i++) {
-		ofLogNotice() << "ofxEtherdream::init - " << i << " Ether Dream " << etherdream_get_id(etherdream_get(i));
-    }
-    
-    device = etherdream_get(idEtherdreamConnection);
-    
-    ofLogNotice() << "ofxEtherdream::init - Connecting...";
-    if (etherdream_connect(device) < 0) return 1;
-
-    ofLogNotice() << "ofxEtherdream::init - done";
-    
-    state = ETHERDREAM_FOUND;
-}
-
-//--------------------------------------------------------------
 void ofxEtherdream::threadedFunction() {
     while (isThreadRunning() != 0) {
         
         switch (state) {
             case ETHERDREAM_NOTFOUND:
-                if(bAutoConnect) init();
+                if(bAutoConnect) connect();
                 break;
                 
             case ETHERDREAM_FOUND:
@@ -124,7 +105,10 @@ void ofxEtherdream::start() {
 void ofxEtherdream::stop() {
     stopThread();
 }
-
+//--------------------------------------------------------------
+void ofxEtherdream::stopEmit(){
+    etherdream_stop(device);
+}
 //--------------------------------------------------------------
 void ofxEtherdream::send() {
     if(!stateIsFound() || points.empty()) return;
@@ -205,4 +189,14 @@ void ofxEtherdream::setPPS(int i) {
 //--------------------------------------------------------------
 int ofxEtherdream::getPPS() const {
     return pps;
+}
+//--------------------------------------------------------------
+ofxEtherdreamInfo* ofxEtherdream::getDeviceInfo()
+{
+    return &_deviceInfo;
+}
+//--------------------------------------------------------------
+bool ofxEtherdream::enableEmit()
+{
+    return etherdream_is_ready(device);
 }
