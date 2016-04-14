@@ -16,6 +16,7 @@ void ofxEtherdream::setDacRef(unsigned long dac_id)
         unsigned long _id = etherdream_get_id(dac);
         if(dac_id == _id){
             device = dac;
+            _deviceInfo = listDevices()[i];
             break;
         }
     }
